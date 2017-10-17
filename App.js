@@ -6,7 +6,7 @@ import { connect, Provider } from 'react-redux'
 //action creator
 function toggleShowText() {
   return new Promise(function(resolve, reject){
-    setTimeout(() => resolve({ type: 'Toggle' }));
+    setTimeout(() => resolve({ type: 'Toggle' }), 3000);
   });
 }
 
@@ -69,6 +69,7 @@ const CBlink = connect(
 
 export default class BlinkApp extends Component {
   render() {
+    setInterval(() => store.dispatch(toggleShowText()), 4000);
     return (
       <Provider store={store}>
         <CBlink />
