@@ -1,10 +1,13 @@
 import React, { Component } from 'react';
 import { AppRegistry, Text, View } from 'react-native';
-import { createStore, combineReducers } from 'redux';
+import { createStore, combineReducers, applyMiddleware } from 'redux';
+import { connect, Provider } from 'react-redux'
 
 //action creator
 function toggleShowText() {
-  return { type: 'Toggle' };
+  return new Promise(function(resolve, reject){
+    setTimeout(() => resolve({ type: 'Toggle' }));
+  });
 }
 
 function showText(state = true, action) {
@@ -16,12 +19,30 @@ function showText(state = true, action) {
   }
 }
 
+function text(state = 'show me', action) {
+  return state;
+}
+
 //reducer
 const showTextApp = combineReducers({
-  showText
+  showText,
+  text
 })
 
-let store = createStore(showTextApp);
+const vanillaPromise = store => next => action => {
+  if (typeof action.then !== 'function') {
+    return next(action)
+  }
+
+  return Promise.resolve(action).then(store.dispatch)
+}
+
+let store = createStore(
+  showTextApp,
+  applyMiddleware(
+    vanillaPromise
+  )
+);
 
 const Blink = ({ text, showText, onTodoClick }) => {
   return (<Text onClick={onTodoClick}>
@@ -31,25 +52,27 @@ const Blink = ({ text, showText, onTodoClick }) => {
 
 const mapStateToProps = state => {
   return {
-    showText: state.showText
+    showText: state.showText,
+    text: state.text
   };
-}
+};
 
 const mapDispatchToProps = dispatch => {
   return {
-    onTodoClick: () => {
-      dispatch(toggleShowText())
-    }
   }
-}
+};
+
+const CBlink = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Blink);
 
 export default class BlinkApp extends Component {
   render() {
     return (
-      <View>
-        <Blink text='I love to blink' showText={true} onTodoClick={() => {}} />
-        <Blink text='I love to blink' showText={true} onTodoClick={() => {}} />
-      </View>
+      <Provider store={store}>
+        <CBlink />
+      </Provider>
     );
   }
 }
